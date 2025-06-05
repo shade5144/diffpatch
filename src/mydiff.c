@@ -3,10 +3,6 @@
 #include <string.h>
 #include "mydiff.h"
 
-// TODO:
-// - Edit Script
-// - Generalize for multiple lines
-
 int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
 {
 	int d = 0;
@@ -258,48 +254,4 @@ int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
 	free(v);
 
 	return d;
-}
-
-int main()
-{
-	// char *string1 = "ABCABBA";
-	// char *string2 = "CBABAC";
-
-	// char *string1 = "abcd";
-	// char *string2 = "ab";
-
-	// char *string1 = "ab";
-	// char *string2 = "abcd";
-
-	char *string2 = "abcd";
-	char *string1 = "";
-
-	Edit_List ed_ls;
-
-	ed_ls.els_ind = 0;
-
-	printf("%d\n", fewest_edits(string1, string2, &ed_ls));
-
-	int els_tracker = ed_ls.els_ind - 1;
-
-	for (int i = 0; i < strlen(string1); i++)
-	{
-		if (els_tracker > -1 && i == ed_ls.els_arr[els_tracker].ed_ind)
-		{
-			if (ed_ls.els_arr[els_tracker].ed_type == 'd')
-			{
-				printf("D%d\n", ed_ls.els_arr[els_tracker].ed_ind);
-			}
-			else
-			{
-				printf("I%d%c\n", ed_ls.els_arr[els_tracker].ed_ind, ed_ls.els_arr[els_tracker].ed_val);
-			}
-
-			els_tracker--;
-		}
-		else
-		{
-			printf("%c\n", string1[i]);
-		}
-	}
 }
