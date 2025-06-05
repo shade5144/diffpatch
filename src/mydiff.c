@@ -17,7 +17,7 @@ int fewest_edits(char *str1, char *str2)
 
 	int max = m + n;
 
-	int *v = (int *)malloc(sizeof(int) * (max + 1));
+	int *v = (int *)malloc(sizeof(int) * (2 * max + 1));
 
 	Backtrack_Store backtrack;
 
@@ -26,6 +26,13 @@ int fewest_edits(char *str1, char *str2)
 	backtrack.back_d = -1;
 
 	int mid = max / 2;
+
+	if (m > n)
+	{
+		mid = (2 * max) - mid;
+	}
+
+	// printf("%d\n", mid);
 
 	v[mid] = 0;
 
@@ -37,6 +44,8 @@ int fewest_edits(char *str1, char *str2)
 		{
 			if (k < -m || k > n)
 			{
+				backtrack.back_ind++;
+				backtrack.back_arr[backtrack.back_ind] = -1;
 				continue;
 			}
 
@@ -71,13 +80,22 @@ int fewest_edits(char *str1, char *str2)
 
 			if (x >= n && y >= m)
 			{
-				printf("--------\n");
-				for (int j = 0; j <= max; j++)
-				{
-					printf("%d ", v[j]);
-				}
+				// printf("--------\n");
+				// for (int j = 0; j <= 2 * max; j++)
+				// {
+				// 	printf("%d ", v[j]);
+				// }
 
-				printf("\n");
+				// printf("\n");
+
+				// printf("--------%d \n", backtrack.back_d);
+				// for (int j = 0; j < backtrack.back_ind; j++)
+				// {
+				// 	printf("%d ", backtrack.back_arr[j]);
+				// }
+
+				// printf("\n");
+
 				int back_d = backtrack.back_d;
 
 				int cur_k;
@@ -85,35 +103,64 @@ int fewest_edits(char *str1, char *str2)
 
 				int prev_x, prev_y;
 
-				for (int a = back_d; a > 0; a--) // Iterate backwards for d
+				for (int a = back_d; a > -1; a--) // Iterate backwards for d
 				{
 					cur_k = x - y;
 
 					// printf("%d\n", cur_k);
 
-					int base = (a - 1) * a / 2;
+					int base = (a - 1) * (a) / 2 + (a == 1);
 
-					// printf("%d\n", base);
+					// printf("-----------%d %d\n", base, a);
 
 					for (int l = -a + 1; l <= a - 1; l += 2) // Revert the array to the previous state
 					{
-						v[mid + l] = backtrack.back_arr[base];
+						int temp = backtrack.back_arr[base];
+
+						if (temp >= 0)
+						{
+							v[mid + l] = temp;
+						}
+
 						base++;
 					}
 
-					if (cur_k == -a || (cur_k != a && cur_k + 1 <= a && cur_k - 1 >= -a && v[mid + cur_k - 1] < v[mid + cur_k + 1]))
+					if (a == 0)
+					{
+						v[mid] = backtrack.back_arr[0];
+					}
+
+					// printf("\n%d --------\n", a);
+					// for (int j = 0; j <= 2 * max; j++)
+					// {
+					// 	printf("%d ", v[j]);
+					// }
+
+					// printf("\n");
+
+					// printf("%d\n", cur_k + 1 <= a);
+					if (cur_k == -a || (cur_k != a && cur_k + 1 <= a && v[mid + cur_k - 1] < v[mid + cur_k + 1]))
 					{
 						prev_k = cur_k + 1;
 					}
 					else
 					{
-						prev_k = cur_k - 1;
+						if (cur_k - 1 >= -a)
+						{
+							prev_k = cur_k - 1;
+						}
+						else
+						{
+							prev_k = cur_k + 1;
+						}
 					}
 
-					// printf("--->%d\n", prev_k);
+					// printf("--->%d %d\n", prev_k, mid);
 
 					prev_x = v[mid + prev_k];
 					prev_y = prev_x - prev_k;
+
+					// printf("%d %d %d\n", prev_x, prev_k, cur_k);
 
 					// printf("!!!!%d %d\n", prev_x, prev_y);
 					// printf("!!!!%d %d\n", a, prev_k);
@@ -123,14 +170,25 @@ int fewest_edits(char *str1, char *str2)
 					{
 						printf("%d %d -> %d %d\n", x - 1, y - 1, x, y);
 
+						// printf("%c\n", str1[x - 1]);
+
 						x--;
 						y--;
 					}
 
-					if (1)
-					{
-						printf("%d %d -> %d %d\n", prev_x, prev_y, x, y);
-					}
+					printf("%d %d -> %d %d\n", prev_x, prev_y, x, y);
+					// if (x - prev_x == 1)
+					// {
+					// 	printf("D%d\n", x);
+					// }
+					// else if (y - prev_y == 1)
+					// {
+					// 	printf("I%d%c\n", x, str2[y - 1]);
+					// }
+
+					// printf("%d %d\n", cur_k, a);
+
+					// printf("%d %d %c %c\n", x - prev_x, y - prev_y, str1[x - 1], str2[y - 1]);
 
 					x = prev_x;
 					y = prev_y;
@@ -145,7 +203,26 @@ int fewest_edits(char *str1, char *str2)
 					// printf("\n");
 				}
 
-				printf("0 0 -> %d %d\n", x, y);
+				while (x > 0 && y > 0)
+				{
+					printf("%d %d -> %d %d\n", x - 1, y - 1, x, y);
+
+					x--;
+					y--;
+				}
+
+				// if (x != 1 || y != 1) // Check if diagonal from origin
+				// {
+				// 	if (x == 1)
+				// 	{
+				// 		printf("D%d\n", x);
+				// 	}
+				// 	else if (y == 1)
+				// 	{
+				// 		printf("I%d%c\n", x, str2[y - 1]);
+				// 	}
+				// }
+				// printf("0 0 -> %d %d\n", x, y);
 
 				// for (int back_d = 0; back_d <= backtrack.back_d; back_d++)
 				// {
@@ -164,14 +241,14 @@ int fewest_edits(char *str1, char *str2)
 			}
 		}
 
-		printf("%d ", d);
+		// printf("%d ", d);
 
-		for (int j = 0; j <= max; j++)
-		{
-			printf("%d ", v[j]);
-		}
+		// for (int j = 0; j <= max; j++)
+		// {
+		// 	printf("%d ", v[j]);
+		// }
 
-		printf("\n");
+		// printf("\n");
 
 		backtrack.back_d++;
 	}
@@ -184,11 +261,17 @@ int fewest_edits(char *str1, char *str2)
 
 int main()
 {
-	// char *string1 = "ABCABBA";
-	// char *string2 = "CBABAC";
+	char *string1 = "ABCABBA";
+	char *string2 = "CBABAC";
 
-	char *string1 = "abc";
-	char *string2 = "a";
+	// char *string1 = "abcd";
+	// char *string2 = "ab";
+
+	// char *string1 = "ab";
+	// char *string2 = "abcd";
+
+	// char *string1 = "abcd";
+	// char *string2 = "";
 
 	printf("%d\n", fewest_edits(string1, string2));
 }
