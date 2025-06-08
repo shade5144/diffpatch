@@ -4,6 +4,7 @@
 #include "mydiff.h"
 
 // TODO:
+// - Go through git documentation somehow
 // - Edit Script
 // - Generalize for multiple lines
 
