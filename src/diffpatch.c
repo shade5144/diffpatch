@@ -13,8 +13,8 @@ int main()
     // char *string1 = "ABCABBA";
     // char *string2 = "CBABAC";
 
-    char *string1 = "abcd";
-    char *string2 = "ba";
+    // char *string1 = "abcd";
+    // char *string2 = "ba";
 
     // char *string1 = "ab";
     // char *string2 = "abcd";
@@ -25,10 +25,13 @@ int main()
     Edit_List ed_ls;
     ed_ls.els_ind = 0;
 
-    printf("String1: %s\n", string1);
-    printf("String2: %s\n", string2);
+    // printf("String1: %s\n", string1);
+    // printf("String2: %s\n", string2);
 
-    printf("%d\n", fewest_edits(string1, string2, &ed_ls));
+    FILE *f1 = fopen("/var/home/rkbarath/Cstuff/Diff/build/foo", "rb");
+    FILE *f2 = fopen("/var/home/rkbarath/Cstuff/Diff/build/bar", "rb");
+
+    printf("%d\n", fewest_edits(f1, f2, &ed_ls));
 
     int els_tracker = ed_ls.els_ind - 1;
 
@@ -39,12 +42,14 @@ int main()
 
     printf("\n");
 
-    char ed_buf[16];
+    char *ed_buf[16];
     char ed_buf_ind = 0;
 
     int ins_flag = 0;
     int prev_ind_buf = -1;
     int ind_buf = -1;
+
+    int iter = 0;
 
     // Handle inserts to the same index
     while (els_tracker > -1)
@@ -55,8 +60,14 @@ int main()
         {
             if (ind_buf != prev_ind_buf && prev_ind_buf != -1)
             {
-                ed_buf[ed_buf_ind] = '\0';
-                printf("I%d%s\n", prev_ind_buf, ed_buf);
+                printf("I%d\n", prev_ind_buf);
+
+                for (iter = 0; iter < ed_buf_ind; iter++)
+                {
+                    printf("> %s\n", ed_buf[iter]);
+
+                    iter++;
+                }
 
                 ed_buf_ind = 0;
                 ins_flag = 0;
@@ -69,6 +80,7 @@ int main()
         }
         else
         {
+            printf("-->%s\n", ed_ls.els_arr[els_tracker].ed_val);
             ed_buf[ed_buf_ind++] = ed_ls.els_arr[els_tracker].ed_val;
             ins_flag = 1;
             // printf("I%d%c\n", ed_ls.els_arr[els_tracker].ed_ind, ed_ls.els_arr[els_tracker].ed_val);
@@ -80,6 +92,15 @@ int main()
 
     if (ed_buf_ind > 0)
     {
-        printf("I%d%s\n", prev_ind_buf, ed_buf);
+        printf("I%d\n", prev_ind_buf);
+
+        iter = 0;
+
+        while (ed_buf[iter] != NULL)
+        {
+            printf("> %s\n", ed_buf[iter]);
+
+            iter++;
+        }
     }
 }

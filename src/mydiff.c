@@ -1,14 +1,67 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include "mydiff.h"
 
-int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
+void appendString(String_Vector *list, char *new_string)
+{
+	if (list->ind + 1 > list->capacity)
+	{
+		list->data = (char **)realloc(list->data, sizeof(char *) * list->capacity * 2);
+
+		list->capacity *= 2;
+	}
+
+	list->data[list->ind] = new_string;
+	list->ind += 1;
+}
+
+int getLines(FILE *file, String_Vector *ret_list)
+{
+	char *line = NULL;
+	char *buf;
+	ssize_t num_read;
+	size_t len;
+
+	int ind = 0;
+
+	while ((num_read = getline(&line, &len, file)) != -1)
+	{
+		buf = (char *)malloc(sizeof(char) * (num_read + 1));
+
+		if (line[num_read - 1] == '\n')
+		{
+			line[num_read - 1] = '\0';
+		}
+
+		strcpy(buf, line);
+
+		appendString(ret_list, buf);
+
+		ind++;
+	}
+
+	return ind;
+}
+
+int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 {
 	int d = 0;
 
-	int n = strlen(str1);
-	int m = strlen(str2);
+	String_Vector str_list1;
+	String_Vector str_list2;
+
+	str_list1.data = (char **)malloc(sizeof(char *) * 8);
+	str_list1.capacity = 8;
+	str_list1.ind = 0;
+
+	str_list2.data = (char **)malloc(sizeof(char *) * 8);
+	str_list2.capacity = 8;
+	str_list2.ind = 0;
+
+	int n = getLines(file1, &str_list1);
+	int m = getLines(file2, &str_list2);
 
 	int max = m + n;
 
@@ -19,6 +72,18 @@ int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
 	backtrack.back_arr = (int *)malloc(sizeof(int) * 128); // Consider using a vector
 	backtrack.back_ind = -1;
 	backtrack.back_d = -1;
+
+	printf("File1 %d: \n", n);
+	for (int i = 0; i < n; i++)
+	{
+		printf("%s\n", str_list1.data[i]);
+	}
+
+	printf("File2 %d: \n", m);
+	for (int i = 0; i < m; i++)
+	{
+		printf("%s\n", str_list2.data[i]);
+	}
 
 	int mid = max / 2;
 
@@ -55,7 +120,7 @@ int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
 
 			if (y >= 0)
 			{
-				while (x < n && y < m && str1[x] == str2[y])
+				while (x < n && y < m && !strcmp(str_list1.data[x], str_list2.data[y]))
 				{
 					x++;
 					y++;
@@ -130,11 +195,13 @@ int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
 
 					if (x - prev_x == 1)
 					{
-						edit_list->els_arr[edit_list->els_ind++] = (Edit_Node){.ed_ind = x, .ed_type = 'd'};
+						edit_list->els_arr[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'd'};
+						edit_list->els_arr[edit_list->els_ind++].ed_val = NULL;
 					}
 					else if (y - prev_y == 1)
 					{
-						edit_list->els_arr[edit_list->els_ind++] = (Edit_Node){.ed_ind = x, .ed_type = 'i', .ed_val = str2[y - 1]};
+						edit_list->els_arr[edit_list->els_ind++] = (Edit_Node){.ed_ind = x, .ed_type = 'i'};
+						// edit_list->els_arr[edit_list->els_ind++].ed_val_ind = x;
 					}
 
 					x = prev_x;
@@ -148,6 +215,12 @@ int fewest_edits(char *str1, char *str2, Edit_List *edit_list)
 					x--;
 					y--;
 				}
+
+				appendString(&str_list1, NULL);
+				appendString(&str_list2, NULL);
+
+				edit_list->els_f1_vec = str_list1.data;
+				edit_list->els_f2_vec = str_list2.data;
 
 				free(backtrack.back_arr);
 				free(v);
