@@ -4,30 +4,27 @@
 #include "mydiff.h"
 
 // TODO:
+// - Generate actionable patch script
 // - Change static arrays to vectors
 
-int main()
+int main(int argc, char **argv)
 {
-    // char *string1 = "ABCABBA";
-    // char *string2 = "CBABAC";
-
-    // char *string1 = "abcd";
-    // char *string2 = "ba";
-
-    // char *string1 = "ab";
-    // char *string2 = "abcd";
-
-    // char *string2 = "abcd";
-    // char *string1 = "";
+    if (argc < 3)
+    {
+        printf("USAGE: ./executable <SOURCE_FILENAME> <DEST_FILENAME>\n");
+        exit(0);
+    }
 
     Edit_List ed_ls;
+
+    ed_ls.els_vec.data = (Edit_Node *)malloc(sizeof(Edit_Node) * 16);
+    ed_ls.els_vec.capacity = 16;
+    ed_ls.els_vec.ind = 0;
+
     ed_ls.els_ind = 0;
 
-    // printf("String1: %s\n", string1);
-    // printf("String2: %s\n", string2);
-
-    FILE *f1 = fopen("/var/home/rkbarath/Cstuff/Diff/build/bar", "rb");
-    FILE *f2 = fopen("/var/home/rkbarath/Cstuff/Diff/build/bar", "rb");
+    FILE *f1 = fopen(argv[1], "rb");
+    FILE *f2 = fopen(argv[2], "rb");
 
     printf("Edits taken: %d\n", fewest_edits(f1, f2, &ed_ls));
     printf("-----\n");
@@ -53,7 +50,7 @@ int main()
     // Handle inserts to the same index
     while (els_tracker > -1)
     {
-        ind_buf = ed_ls.els_arr[els_tracker].ed_ind;
+        ind_buf = ed_ls.els_vec.data[els_tracker].ed_ind;
 
         if (ins_flag)
         {
@@ -75,15 +72,15 @@ int main()
             }
         }
 
-        if (ed_ls.els_arr[els_tracker].ed_type == 'd')
+        if (ed_ls.els_vec.data[els_tracker].ed_type == 'd')
         {
-            printf("D%d\n", ed_ls.els_arr[els_tracker].ed_ind);
-            printf("< %s\n", ed_ls.els_arr[els_tracker].ed_val);
+            printf("D%d\n", ed_ls.els_vec.data[els_tracker].ed_ind);
+            printf("< %s\n", ed_ls.els_vec.data[els_tracker].ed_val);
         }
         else
         {
             // printf("-->%s\n", ed_ls.els_arr[els_tracker].ed_val);
-            ed_buf[ed_buf_ind++] = ed_ls.els_arr[els_tracker].ed_val;
+            ed_buf[ed_buf_ind++] = ed_ls.els_vec.data[els_tracker].ed_val;
             ins_flag = 1;
             // printf("I%d%c\n", ed_ls.els_arr[els_tracker].ed_ind, ed_ls.els_arr[els_tracker].ed_val);
         }

@@ -4,6 +4,19 @@
 #include <sys/types.h>
 #include "mydiff.h"
 
+void appendInt(Int_Vector *vec, int new_int)
+{
+	if (vec->ind + 1 > vec->capacity)
+	{
+		vec->data = (int *)realloc(vec->data, sizeof(int) * vec->capacity * 2);
+
+		vec->capacity *= 2;
+	}
+
+	vec->data[vec->ind] = new_int;
+	vec->ind += 1;
+}
+
 void appendString(String_Vector *list, char *new_string)
 {
 	if (list->ind + 1 > list->capacity)
@@ -15,6 +28,22 @@ void appendString(String_Vector *list, char *new_string)
 
 	list->data[list->ind] = new_string;
 	list->ind += 1;
+}
+
+void appendEditNode(Edit_Vector *vec, Edit_Node *new_node)
+{
+	if (vec->ind + 1 > vec->capacity)
+	{
+		vec->data = (Edit_Node *)realloc(vec->data, sizeof(Edit_Node) * vec->capacity * 2);
+
+		vec->capacity *= 2;
+	}
+
+	vec->data[vec->ind].ed_ind = new_node->ed_ind;
+	vec->data[vec->ind].ed_type = new_node->ed_type;
+	vec->data[vec->ind].ed_val = new_node->ed_val;
+
+	vec->ind += 1;
 }
 
 int getLines(FILE *file, String_Vector *ret_list)
@@ -69,7 +98,10 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 
 	Backtrack_Store backtrack;
 
-	backtrack.back_arr = (int *)malloc(sizeof(int) * 128); // Consider using a vector
+	backtrack.back_vec.data = (int *)malloc(sizeof(int) * 128); // Consider using a vector
+	backtrack.back_vec.capacity = 128;
+	backtrack.back_vec.ind = 0;
+
 	backtrack.back_ind = -1;
 	backtrack.back_d = -1;
 
@@ -101,7 +133,7 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 			if (k < -m || k > n)
 			{
 				backtrack.back_ind++;
-				backtrack.back_arr[backtrack.back_ind] = -1;
+				appendInt(&backtrack.back_vec, -1);
 				continue;
 			}
 
@@ -130,7 +162,7 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 			v[k + mid] = x;
 
 			backtrack.back_ind++;
-			backtrack.back_arr[backtrack.back_ind] = x;
+			appendInt(&backtrack.back_vec, x);
 
 			if (x >= n && y >= m)
 			{
@@ -149,7 +181,7 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 
 					for (int l = -a + 1; l <= a - 1; l += 2) // Revert the array to the previous state
 					{
-						int temp = backtrack.back_arr[base];
+						int temp = backtrack.back_vec.data[base];
 
 						if (temp >= 0)
 						{
@@ -161,7 +193,7 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 
 					if (a == 0)
 					{
-						v[mid] = backtrack.back_arr[0];
+						v[mid] = backtrack.back_vec.data[0];
 					}
 
 					if (cur_k == -a || (cur_k != a && cur_k + 1 <= a && v[mid + cur_k - 1] < v[mid + cur_k + 1]))
@@ -195,13 +227,17 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 
 					if (x - prev_x == 1)
 					{
-						edit_list->els_arr[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'd'};
-						edit_list->els_arr[edit_list->els_ind++].ed_val = str_list1.data[x - 1];
+						edit_list->els_ind++;
+						appendEditNode(&edit_list->els_vec, &((Edit_Node){.ed_ind = x, .ed_type = 'd', .ed_val = str_list1.data[x - 1]}));
+						// edit_list->els_vec[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'd'};
+						// edit_list->els_vec[edit_list->els_ind++].ed_val = str_list1.data[x - 1];
 					}
 					else if (y - prev_y == 1)
 					{
-						edit_list->els_arr[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'i'};
-						edit_list->els_arr[edit_list->els_ind++].ed_val = str_list2.data[y - 1];
+						edit_list->els_ind++;
+						appendEditNode(&edit_list->els_vec, &((Edit_Node){.ed_ind = x, .ed_type = 'i', .ed_val = str_list2.data[y - 1]}));
+						// edit_list->els_vec[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'i'};
+						// edit_list->els_vec[edit_list->els_ind++].ed_val = str_list2.data[y - 1];
 					}
 
 					x = prev_x;
@@ -222,7 +258,7 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 				edit_list->els_f1_vec = str_list1.data;
 				edit_list->els_f2_vec = str_list2.data;
 
-				free(backtrack.back_arr);
+				free(backtrack.back_vec.data);
 				free(v);
 				return d;
 			}
@@ -231,7 +267,7 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 		backtrack.back_d++;
 	}
 
-	free(backtrack.back_arr);
+	free(backtrack.back_vec.data);
 	free(v);
 
 	return d;
