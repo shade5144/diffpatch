@@ -71,6 +71,8 @@ int getLines(FILE *file, String_Vector *ret_list)
 		ind++;
 	}
 
+	free(line);
+
 	return ind;
 }
 
@@ -105,17 +107,8 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 	backtrack.back_ind = -1;
 	backtrack.back_d = -1;
 
-	printf("File1 %d: \n", n);
-	for (int i = 0; i < n; i++)
-	{
-		printf("%s\n", str_list1.data[i]);
-	}
-
-	printf("File2 %d: \n", m);
-	for (int i = 0; i < m; i++)
-	{
-		printf("%s\n", str_list2.data[i]);
-	}
+	printf("No lines in File1 %d: \n", n);
+	printf("No lines in File2 %d: \n", m);
 
 	int mid = max / 2;
 
@@ -229,15 +222,11 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 					{
 						edit_list->els_ind++;
 						appendEditNode(&edit_list->els_vec, &((Edit_Node){.ed_ind = x, .ed_type = 'd', .ed_val = str_list1.data[x - 1]}));
-						// edit_list->els_vec[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'd'};
-						// edit_list->els_vec[edit_list->els_ind++].ed_val = str_list1.data[x - 1];
 					}
 					else if (y - prev_y == 1)
 					{
 						edit_list->els_ind++;
 						appendEditNode(&edit_list->els_vec, &((Edit_Node){.ed_ind = x, .ed_type = 'i', .ed_val = str_list2.data[y - 1]}));
-						// edit_list->els_vec[edit_list->els_ind] = (Edit_Node){.ed_ind = x, .ed_type = 'i'};
-						// edit_list->els_vec[edit_list->els_ind++].ed_val = str_list2.data[y - 1];
 					}
 
 					x = prev_x;

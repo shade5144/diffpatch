@@ -29,19 +29,19 @@ int main(int argc, char **argv)
     printf("Edits taken: %d\n", fewest_edits(f1, f2, &ed_ls));
     printf("-----\n");
 
+    fclose(f1);
+    fclose(f2);
+
     int els_tracker = ed_ls.els_ind - 1;
 
-    // for (int i = 0; i < ed_ls.els_ind; i++)
-    // {
-    //     printf("%d ", ed_ls.els_arr[i].ed_ind);
-    // }
+    String_Vector ed_buf; // Probably turn this into a String_Vector
 
-    // printf("\n");
-
-    char *ed_buf[16];
-    char ed_buf_ind = 0;
+    ed_buf.data = (char **)malloc(sizeof(char *) * 16);
+    ed_buf.capacity = 16;
+    ed_buf.ind = 0;
 
     int ins_flag = 0;
+    int flush_flag = 0;
     int prev_ind_buf = -1;
     int ind_buf = -1;
 
@@ -54,20 +54,22 @@ int main(int argc, char **argv)
 
         if (ins_flag)
         {
-            if (ind_buf != prev_ind_buf && prev_ind_buf != -1)
+            if ((ind_buf != prev_ind_buf && prev_ind_buf != -1) || ed_buf.ind >= 128) // Flush if 128 edits are considered
             {
-                ed_buf[ed_buf_ind] = NULL;
+                appendString(&ed_buf, NULL);
 
-                printf("I%d\n", prev_ind_buf);
+                printf("%dI%d\n", ed_buf.ind, prev_ind_buf);
 
-                for (iter = 0; iter < ed_buf_ind; iter++)
+                iter = 0;
+
+                while (ed_buf.data[iter] != NULL)
                 {
-                    printf("> %s\n", ed_buf[iter]);
+                    printf("> %s\n", ed_buf.data[iter]);
 
                     iter++;
                 }
 
-                ed_buf_ind = 0;
+                ed_buf.ind = 0;
                 ins_flag = 0;
             }
         }
@@ -79,29 +81,42 @@ int main(int argc, char **argv)
         }
         else
         {
-            // printf("-->%s\n", ed_ls.els_arr[els_tracker].ed_val);
-            ed_buf[ed_buf_ind++] = ed_ls.els_vec.data[els_tracker].ed_val;
+            appendString(&ed_buf, ed_ls.els_vec.data[els_tracker].ed_val);
             ins_flag = 1;
-            // printf("I%d%c\n", ed_ls.els_arr[els_tracker].ed_ind, ed_ls.els_arr[els_tracker].ed_val);
         }
 
         prev_ind_buf = ind_buf;
         els_tracker--;
     }
 
-    if (ed_buf_ind > 0)
+    if (ed_buf.ind > 0)
     {
-        ed_buf[ed_buf_ind] = NULL;
+        appendString(&ed_buf, NULL);
 
         printf("I%d\n", prev_ind_buf);
 
         iter = 0;
 
-        while (ed_buf[iter] != NULL)
+        while (ed_buf.data[iter] != NULL)
         {
-            printf("> %s\n", ed_buf[iter]);
+            printf("> %s\n", ed_buf.data[iter]);
 
             iter++;
         }
     }
+
+    for (int i = 0; ed_ls.els_f1_vec[i] != NULL; i++)
+    {
+        free(ed_ls.els_f1_vec[i]);
+    }
+
+    for (int i = 0; ed_ls.els_f2_vec[i] != NULL; i++)
+    {
+        free(ed_ls.els_f2_vec[i]);
+    }
+
+    free(ed_buf.data);
+    free(ed_ls.els_f1_vec);
+    free(ed_ls.els_f2_vec);
+    free(ed_ls.els_vec.data);
 }
