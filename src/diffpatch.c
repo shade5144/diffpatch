@@ -4,9 +4,7 @@
 #include "mydiff.h"
 
 // TODO:
-// - Go through git documentation somehow
-// - Edit Script
-// - Generalize for multiple lines
+// - Change static arrays to vectors
 
 int main()
 {
@@ -28,19 +26,20 @@ int main()
     // printf("String1: %s\n", string1);
     // printf("String2: %s\n", string2);
 
-    FILE *f1 = fopen("/var/home/rkbarath/Cstuff/Diff/build/foo", "rb");
+    FILE *f1 = fopen("/var/home/rkbarath/Cstuff/Diff/build/bar", "rb");
     FILE *f2 = fopen("/var/home/rkbarath/Cstuff/Diff/build/bar", "rb");
 
-    printf("%d\n", fewest_edits(f1, f2, &ed_ls));
+    printf("Edits taken: %d\n", fewest_edits(f1, f2, &ed_ls));
+    printf("-----\n");
 
     int els_tracker = ed_ls.els_ind - 1;
 
-    for (int i = 0; i < ed_ls.els_ind; i++)
-    {
-        printf("%d ", ed_ls.els_arr[i].ed_ind);
-    }
+    // for (int i = 0; i < ed_ls.els_ind; i++)
+    // {
+    //     printf("%d ", ed_ls.els_arr[i].ed_ind);
+    // }
 
-    printf("\n");
+    // printf("\n");
 
     char *ed_buf[16];
     char ed_buf_ind = 0;
@@ -60,6 +59,8 @@ int main()
         {
             if (ind_buf != prev_ind_buf && prev_ind_buf != -1)
             {
+                ed_buf[ed_buf_ind] = NULL;
+
                 printf("I%d\n", prev_ind_buf);
 
                 for (iter = 0; iter < ed_buf_ind; iter++)
@@ -77,10 +78,11 @@ int main()
         if (ed_ls.els_arr[els_tracker].ed_type == 'd')
         {
             printf("D%d\n", ed_ls.els_arr[els_tracker].ed_ind);
+            printf("< %s\n", ed_ls.els_arr[els_tracker].ed_val);
         }
         else
         {
-            printf("-->%s\n", ed_ls.els_arr[els_tracker].ed_val);
+            // printf("-->%s\n", ed_ls.els_arr[els_tracker].ed_val);
             ed_buf[ed_buf_ind++] = ed_ls.els_arr[els_tracker].ed_val;
             ins_flag = 1;
             // printf("I%d%c\n", ed_ls.els_arr[els_tracker].ed_ind, ed_ls.els_arr[els_tracker].ed_val);
@@ -92,6 +94,8 @@ int main()
 
     if (ed_buf_ind > 0)
     {
+        ed_buf[ed_buf_ind] = NULL;
+
         printf("I%d\n", prev_ind_buf);
 
         iter = 0;
