@@ -107,8 +107,8 @@ int fewest_edits(FILE *file1, FILE *file2, Edit_List *edit_list)
 	backtrack.back_ind = -1;
 	backtrack.back_d = -1;
 
-	printf("No lines in File1 %d: \n", n);
-	printf("No lines in File2 %d: \n", m);
+	// printf("No lines in File1 %d: \n", n);
+	// printf("No lines in File2 %d: \n", m);
 
 	int mid = max / 2;
 

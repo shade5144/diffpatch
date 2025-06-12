@@ -3,15 +3,11 @@
 #include <string.h>
 #include "mydiff.h"
 
-// TODO:
-// - Generate actionable patch script
-// - Change static arrays to vectors
-
 int main(int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 4)
     {
-        printf("USAGE: ./executable <SOURCE_FILENAME> <DEST_FILENAME>\n");
+        printf("USAGE: ./executable <SOURCE_FILENAME> <DEST_FILENAME> <PATCH_FILE>\n");
         exit(0);
     }
 
@@ -26,8 +22,12 @@ int main(int argc, char **argv)
     FILE *f1 = fopen(argv[1], "rb");
     FILE *f2 = fopen(argv[2], "rb");
 
-    printf("Edits taken: %d\n", fewest_edits(f1, f2, &ed_ls));
-    printf("-----\n");
+    int ret = fewest_edits(f1, f2, &ed_ls);
+
+    printf("Edits taken: %d\n", ret);
+
+    // printf("Edits taken: %d\n", fewest_edits(f1, f2, &ed_ls));
+    // printf("-----\n");
 
     fclose(f1);
     fclose(f2);
@@ -41,11 +41,17 @@ int main(int argc, char **argv)
     ed_buf.ind = 0;
 
     int ins_flag = 0;
-    int flush_flag = 0;
+
+    int del_flag = 0; // Add delete range
+    int del_start = 0;
+    int del_end = 0;
+
     int prev_ind_buf = -1;
     int ind_buf = -1;
 
     int iter = 0;
+
+    FILE *patch_file = fopen(argv[3], "wb");
 
     // Handle inserts to the same index
     while (els_tracker > -1)
@@ -58,13 +64,14 @@ int main(int argc, char **argv)
             {
                 appendString(&ed_buf, NULL);
 
-                printf("%dI%d\n", ed_buf.ind, prev_ind_buf);
+                fprintf(patch_file, "I%d\n", prev_ind_buf);
 
                 iter = 0;
 
                 while (ed_buf.data[iter] != NULL)
                 {
-                    printf("> %s\n", ed_buf.data[iter]);
+                    fprintf(patch_file, ">%s\n", ed_buf.data[iter]);
+                    // printf(">%s\n", ed_buf.data[iter]);
 
                     iter++;
                 }
@@ -76,13 +83,35 @@ int main(int argc, char **argv)
 
         if (ed_ls.els_vec.data[els_tracker].ed_type == 'd')
         {
-            printf("D%d\n", ed_ls.els_vec.data[els_tracker].ed_ind);
-            printf("< %s\n", ed_ls.els_vec.data[els_tracker].ed_val);
+            if (del_flag)
+            {
+                del_end = ed_ls.els_vec.data[els_tracker].ed_ind;
+            }
+            else
+            {
+                del_end = -1;
+                del_start = ed_ls.els_vec.data[els_tracker].ed_ind;
+                del_flag = 1;
+            }
         }
         else
         {
             appendString(&ed_buf, ed_ls.els_vec.data[els_tracker].ed_val);
             ins_flag = 1;
+
+            if (del_flag)
+            {
+                int del_end_buf = del_end;
+
+                if (del_end == -1)
+                {
+                    del_end_buf = del_start;
+                }
+
+                fprintf(patch_file, "D%d,%d\n", del_start, del_end_buf);
+            }
+
+            del_flag = 0;
         }
 
         prev_ind_buf = ind_buf;
@@ -93,17 +122,31 @@ int main(int argc, char **argv)
     {
         appendString(&ed_buf, NULL);
 
-        printf("I%d\n", prev_ind_buf);
+        fprintf(patch_file, "I%d\n", prev_ind_buf);
 
         iter = 0;
 
         while (ed_buf.data[iter] != NULL)
         {
-            printf("> %s\n", ed_buf.data[iter]);
+            fprintf(patch_file, ">%s\n", ed_buf.data[iter]);
 
             iter++;
         }
     }
+
+    if (del_flag)
+    {
+        int del_end_buf = del_end;
+
+        if (del_end == -1)
+        {
+            del_end_buf = del_start;
+        }
+
+        fprintf(patch_file, "D%d,%d\n", del_start, del_end_buf);
+    }
+
+    fclose(patch_file);
 
     for (int i = 0; ed_ls.els_f1_vec[i] != NULL; i++)
     {
